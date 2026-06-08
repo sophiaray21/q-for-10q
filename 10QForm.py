@@ -90,7 +90,12 @@ def download_from_url(username,email_address,url, dest_dir=".", filename=None, h
 
 #download_from_url("Lawrence Xie","xie.law@northeastern.edu","https://www.sec.gov/Archives/edgar/data/320193/000032019326000013/aapl-20260328.htm")
 
-def download_from_ticker(username,email_address,ticker):
+def download_from_ticker(username,email_address,ticker,limit=10):
     #cik = _get_CIK_from_ticker(username,email_address,ticker)
     Q_filings,cik = get_10Q_filings_from_ticker(username,email_address,ticker)
-    #Q_forms = get_10Q_from_filings()
+    #Q_filings is a list of filing json objects
+    for filing in Q_filings[:limit]:
+        Q_form_url = get_10Q_from_filings(cik,filing["accessionNumber"],filing['primaryDocument'])
+        download_from_url(username,email_address,Q_form_url)
+
+download_from_ticker("Lawrence Xie","xie.law@northeastern.edu","AAPL",3)
