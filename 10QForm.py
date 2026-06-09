@@ -37,7 +37,7 @@ def _get_10Q_filings(username,email_address,cik):
     submissions_data = response.json()
 
     
-    recent_filings = submissions_data['filings']['recent']
+    recent_filings = submissions_data['filings']['recent'] # we should porlly change this
 
     ten_q_filings = []
     for i in range(len(recent_filings['form'])):
