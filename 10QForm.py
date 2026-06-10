@@ -1,6 +1,8 @@
 import requests
 import os
 from urllib.parse import urlsplit, unquote
+import pandas as pd
+
 
 '''
 Given your name/organization and an email address and the ticker name of the company, will do a get request for that company's respective cik number
@@ -98,4 +100,16 @@ def download_from_ticker(username,email_address,ticker,limit=10):
         Q_form_url = get_10Q_from_filings(cik,filing["accessionNumber"],filing['primaryDocument'])
         download_from_url(username,email_address,Q_form_url)
 
-download_from_ticker("Lawrence Xie","xie.law@northeastern.edu","AAPL",3)
+#download_from_ticker("Lawrence Xie","xie.law@northeastern.edu","AAPL",3)
+
+
+# Open and parse all tables in the HTML file
+file_path = "aapl-20250628.htm"
+all_tables = pd.read_html(file_path)
+
+# Look through the list of dataframes found to locate the financial sheets
+print(f"Found {len(all_tables)} tables in this document.")
+
+# View the first table found
+print(all_tables)
+#print(all_tables[0].head())
