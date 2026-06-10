@@ -103,13 +103,22 @@ def download_from_ticker(username,email_address,ticker,limit=10):
 #download_from_ticker("Lawrence Xie","xie.law@northeastern.edu","AAPL",3)
 
 
-# Open and parse all tables in the HTML file
-file_path = "aapl-20250628.htm"
-all_tables = pd.read_html(file_path)
+# # Open and parse all tables in the HTML file
+# file_path = "aapl-20250628.htm"
+# all_tables = pd.read_html(file_path)
 
-# Look through the list of dataframes found to locate the financial sheets
-print(f"Found {len(all_tables)} tables in this document.")
+# # Look through the list of dataframes found to locate the financial sheets
+# print(f"Found {len(all_tables)} tables in this document.")
 
-# View the first table found
-print(all_tables)
-#print(all_tables[0].head())
+# # View the first table found
+# #print(all_tables)
+# print(all_tables[4:11])
+# print(all_tables[13:16])
+# print(all_tables[17:30])
+# #no 11 12
+# #yes 13 14 15 17 18 19 20
+
+def access_htm(filepath):
+    all_tables = pd.read_html(filepath)
+    return all_tables[4:11] + all_tables[13:16] + all_tables[17:30]
+print(access_htm("aapl-20250628.htm"))
