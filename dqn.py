@@ -19,7 +19,11 @@ class DQN:
         self.b1 = np.zeros(hidden1)
         self.W2 = rng.normal(0, np.sqrt(2.0 / hidden1), (hidden1, hidden2))
         self.b2 = np.zeros(hidden2)
-        self.W3 = rng.normal(0, np.sqrt(2.0 / hidden2), (hidden2, n_actions))
+        # output layer gets a much smaller init than He on purpose: quarterly rewards
+        # live around +/-0.05, and if the initial Q-values come out at magnitude ~1 the
+        # network wastes thousands of updates just shrinking them toward zero before any
+        # buy/sell signal can be learned. Small init = Q starts near 0 = "knows nothing".
+        self.W3 = rng.normal(0, 0.01, (hidden2, n_actions))
         self.b3 = np.zeros(n_actions)
         self.lr = lr
 
