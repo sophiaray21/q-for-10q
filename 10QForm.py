@@ -121,4 +121,7 @@ def download_from_ticker(username,email_address,ticker,limit=10):
 def access_htm(filepath):
     all_tables = pd.read_html(filepath)
     return all_tables[4:11] + all_tables[13:16] + all_tables[17:30]
-print(access_htm("aapl-20250628.htm"))
+
+
+if __name__ == "__main__":
+    print(access_htm("aapl-20250628.htm"))

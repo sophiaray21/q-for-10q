@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 dqn_weights.npz
 *.htm
+filings/
+states.csv
+sentiment_cache.csv
