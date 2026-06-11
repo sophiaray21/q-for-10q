@@ -25,7 +25,8 @@ Design choices and why:
 - cost = 0.001 (10 bps one-way) is a standard rough assumption for liquid large caps.
 '''
 
-ACTION_TO_POSITION = {0: -1, 1: 0, 2: +1}   # sell, hold, buy
+from actions import ACTION_TO_POSITION
+
 TRANSACTION_COST = 0.001
 
 
