@@ -1,4 +1,5 @@
 import numpy as np
+from actions import N_ACTIONS
 
 '''
 The Q-network for the agent, written from scratch in numpy (no pytorch/tensorflow allowed
@@ -11,7 +12,7 @@ it takes a state and estimates how good each action is from that state.
 
 
 class DQN:
-    def __init__(self, state_dim=11, hidden1=64, hidden2=32, n_actions=3, lr=0.001, seed=None):
+    def __init__(self, state_dim=11, hidden1=64, hidden2=32, n_actions=N_ACTIONS, lr=0.001, seed=None):
         rng = np.random.default_rng(seed)
         # He initialization - scales the random weights by sqrt(2/fan_in) so the
         # signal doesn't blow up or die going through the ReLU layers

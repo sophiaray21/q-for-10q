@@ -1,4 +1,5 @@
 import numpy as np
+from actions import BUY, random_action
 from reward import reward
 from train import make_fake_states, load_states, train
 
@@ -35,9 +36,9 @@ def run_policy(stocks, mode, agent=None, seed=0):
             if mode == "dqn":
                 a = agent.act(states[t], greedy=True)
             elif mode == "buyhold":
-                a = 2
+                a = BUY
             else:
-                a = int(rng.integers(0, 3))
+                a = random_action(rng)
             r, prev_pos = reward(a, prices[t], prices[t + 1], prev_pos)
             rets.append(r)
     return np.array(rets)

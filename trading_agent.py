@@ -1,4 +1,5 @@
 import numpy as np
+from actions import random_action
 from dqn import DQN
 from replay_buffer import ReplayBuffer
 
@@ -14,9 +15,6 @@ Two DQN tricks in here, both from Mnih et al. 2015:
   N steps. If the same network produced both the prediction and the target, the target
   would move every update and training chases its own tail.
 '''
-
-ACTIONS = {0: "sell", 1: "hold", 2: "buy"}
-
 
 class TradingAgent:
     def __init__(self, state_dim=11, gamma=0.95, lr=0.005,
@@ -37,7 +35,7 @@ class TradingAgent:
     def act(self, state, greedy=False):
         '''epsilon-greedy. greedy=True for evaluation/backtest (no exploration).'''
         if not greedy and self.rng.random() < self.eps:
-            return int(self.rng.integers(0, 3))
+            return random_action(self.rng)
         q = self.online.predict(state)
         return int(np.argmax(q[0]))
 
