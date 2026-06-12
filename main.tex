@@ -1,0 +1,127 @@
+\documentclass[11pt, letterpaper]{article}
+
+% ---------- packages ----------
+\usepackage[margin=0.7in]{geometry}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+
+% ---------- colors ----------
+\definecolor{boxborder}{RGB}{60, 90, 150}
+\definecolor{boxbg}{RGB}{245, 248, 255}
+\definecolor{headcolor}{HTML}{00636f}
+
+% ---------- tcolorbox style ----------
+\tcbset{
+  sectionbox/.style={
+    colframe=boxborder,
+    colback=boxbg,
+    boxrule=0.6pt,
+    arc=2pt,
+    left=6pt, right=6pt, top=4pt, bottom=4pt,
+    fontupper=\scriptsize,
+  }
+}
+
+% ---------- section formatting ----------
+\titleformat{\section}
+  {\normalsize\bfseries\color{headcolor}}{\thesection.}{0.4em}{}
+\titlespacing*{\section}{0pt}{6pt}{2pt}
+
+% ---------- header / footer ----------
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0.4pt}
+\lhead{\small\color{headcolor} CS 4100 Project Executive Summary}
+\cfoot{\small\thepage}
+
+% ---------- suppress paragraph indent ----------
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{3pt}
+
+\begin{document}
+
+% ===== TITLE BLOCK =====
+\begin{center}
+  {\Large\bfseries\color{headcolor} Q for 10-Q: A From-Scratch Deep Q-Network Trading Agent for Quarterly SEC Filings}\\[4pt]
+  {\normalsize Sophia Ray, Aum Moorjani, Lawrence Xie}\\[2pt]
+\end{center}
+
+\vspace{4pt}
+
+% ===== 1. MOTIVATION & PROBLEM STATEMENT =====
+\section{Motivation \& Problem Statement}
+
+Every public company in the United States files a 10-Q report with the SEC each quarter, containing its financial statements and a narrative section, Management's Discussion and Analysis (MD\&A), in which management explains how the quarter went. These filings are dense, standardized, and freely available, yet most quantitative trading research focuses on high-frequency price data or news headlines rather than on this slow, information-rich disclosure cycle. The gap we address is whether the arrival of a new 10-Q, combining hard numbers with soft language, carries enough signal for an agent to learn a profitable trading policy at a quarterly horizon. Reinforcement learning is a natural fit because the problem is inherently sequential: each filing prompts a decision, the decision sets a position, and the consequences arrive one quarter later as a return. Prior work in textual finance, notably Loughran and McDonald's analysis of filing language [2], shows that disclosure tone predicts returns, while Mnih et al.'s Deep Q-Network [1] demonstrates that a neural network can learn value functions directly from experience. Our core research question is: can a Deep Q-Network that reads a state vector built from a company's latest 10-Q financials, recent market behavior, and MD\&A sentiment learn a buy, hold, or sell policy that beats passive and random baselines out of sample? A secondary engineering goal shapes the whole project: the entire neural network, including backpropagation, is implemented from scratch in NumPy, with no PyTorch or TensorFlow. This constraint forces every component, from weight initialization to the temporal difference update, to be understood and verified rather than imported.
+
+% ===== 2. APPROACH =====
+\section{Approach}
+
+We frame quarterly trading as a Markov decision process. The state is an 11-dimensional vector summarizing one stock-quarter: five financial features from the filing (year-over-year revenue growth, net margin, operating cash flow over revenue, liabilities over assets, and diluted EPS change), four market features (trailing quarterly log return, daily volatility, volume change, and 12-month momentum), and two text features (an MD\&A sentiment scalar and its change versus the prior quarter). The action space is sell, hold, or buy, which sets a target position of short, flat, or long held until the next filing. The reward is the position times the next quarter's log return minus transaction costs on position changes, so maximizing total reward maximizes compounded growth. The data pipeline pulls filings from SEC EDGAR, financial facts from the SEC XBRL companyfacts API (which avoids fragile HTML table parsing), and prices from yfinance. Sentiment is computed with the sentence-transformers library: each MD\&A sentence is embedded and scored by its similarity to positive versus negative anchor sentences written in filing language, requiring no labeled training data. The agent is a standard DQN in the style of Mnih et al. [1]: a small feedforward Q-network (11 to 64 to 32 to 3 units) with experience replay, epsilon-greedy exploration, and a periodically synced target network, all implemented in NumPy with an analytic gradient verified against numerical differentiation. A critical design decision is that everything aligns to the filing date rather than the quarter end, since a 10-Q becomes public roughly five weeks after the quarter closes; market features use only data available by the filing date and trades execute at the first close on or after it, eliminating look-ahead bias. Evaluation is walk-forward: the agent trains only on the earliest 70 percent of each stock's history and is run greedily on the held-out later 30 percent. Scope is limited to unit positions, a 10 basis point one-way transaction cost, and a small universe of large-cap tickers. Primary tools are NumPy, pandas, requests, yfinance, BeautifulSoup, and sentence-transformers.
+
+% ===== 3. KEY RESULTS =====
+\section{Key Results}
+
+Each component passes an isolated correctness check before integration. The from-scratch backpropagation matches numerical gradients to eight significant figures, and on a synthetic dataset with a planted predictive pattern the agent's greedy accuracy rises from 29 percent before training to 80 percent after 5{,}000 steps, confirming that the full learning stack works. On real data built from AAPL, MSFT, and JPM filings (27 stock-quarters), training reward improves steadily from $-0.166$ in the first epoch to $+1.702$ in the last. The walk-forward backtest on the held-out 30 percent of history gives the comparison below.
+
+\begin{center}
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Policy} & \textbf{Total return} & \textbf{Avg reward/qtr} & \textbf{Max drawdown} & \textbf{Win rate} \\
+\midrule
+DQN (greedy)   & $+67.3\%$ & $+0.0858$ & $-11.0\%$ & 50\% \\
+Buy and hold   & $+48.0\%$ & $+0.0653$ & $-21.3\%$ & 50\% \\
+Random         & $-9.1\%$  & $-0.0159$ & $-27.4\%$ & 33\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The trained agent beats both baselines on total return and, notably, halves the maximum drawdown relative to buy and hold, suggesting it learned to step aside in weak quarters rather than simply staying long. The clear gap over the random policy is the honest check that the network learned something real rather than noise. What surprised us most was how much of the project's difficulty lived in the data layer rather than the learning algorithm: the DQN itself worked once Q-value scales were handled, while XBRL wrangling consumed far more effort than expected. The main caveat is sample size; with only nine held-out stock-quarters, these results demonstrate that the pipeline works end to end on real filings rather than establishing statistical significance, and expanding the ticker universe is the clear next step.
+
+% ===== 4. CHALLENGES & LESSONS LEARNED =====
+\section{Challenges \& Lessons Learned}
+
+The hardest technical challenges were in the data, not the model. XBRL tags vary across companies and eras (banks report revenue under a different concept than tech companies, which we discovered when JPMorgan produced empty rows), and cash flow items are reported year-to-date, so quarterly values had to be recovered by differencing windows that share a fiscal-year start. Extracting the MD\&A section required handling the fact that its heading appears twice in every filing, once in the table of contents and once at the real section. On the learning side, the agent initially wasted thousands of updates shrinking He-initialized outputs toward the tiny scale of quarterly rewards (about 0.05), which we fixed by initializing the output layer near zero so the starting Q-values mean ``knows nothing.'' Guarding against look-ahead bias demanded constant discipline, from filing-date alignment to fitting normalization statistics only on the training portion of history. Organizationally, tracking work through GitHub issues with one branch and pull request per ticket kept three contributors from colliding and left a reviewable record of every design decision. The transferable lessons: verify each component in isolation before integration (the numerical gradient check and planted-pattern test caught issues early), assume real-world financial data is inconsistent until proven otherwise, and treat temporal hygiene as a first-class requirement in any backtest.
+
+% ===== 5. INDIVIDUAL CONTRIBUTIONS =====
+\section{Individual Contributions}
+\begin{tcolorbox}[sectionbox, height=3.5cm, valign=top]
+  \vspace{4pt}
+  \centering
+  \begin{tabularx}{0.95\textwidth}{l X c}
+    \toprule
+    \textbf{Member} & \textbf{Primary Contributions} & \textbf{Approx.\ \%} \\
+    \midrule
+    Sophia Ray & MD\&A sentiment pipeline (sentence-transformers); state vector builder merging XBRL financials, market data, and sentiment; action space formalization; project tracker, documentation, and PR reviews & 34\% \\
+    Aum Moorjani & NumPy DQN with verified backpropagation; experience replay buffer; reward function; trading agent (epsilon-greedy, target network); training loop and walk-forward backtest & 33\% \\
+    Lawrence Xie & SEC EDGAR data collection: ticker to CIK lookup, 10-Q filing discovery and downloader; yfinance price and volume retrieval & 33\% \\
+    \bottomrule
+  \end{tabularx}
+\end{tcolorbox}
+
+% ===== 6. REPOSITORY & REFERENCES =====
+\section{Repository \& References}
+\begin{tcolorbox}[sectionbox, height=4.7cm, valign=top]
+  \textbf{GitHub Repository:}
+  \href{https://github.com/sophiaray21/q-for-10q}%
+       {\texttt{https://github.com/sophiaray21/q-for-10q}}\vspace{1em}
+
+  \textbf{Project Tracker:} \href{https://github.com/sophiaray21/q-for-10q/issues}{\texttt{https://github.com/sophiaray21/q-for-10q/issues}}\\
+  Work was tracked as GitHub issues organized into phase milestones, with one branch and pull request per issue.
+
+  \vspace{6pt}
+  \textbf{Key References:}
+  \begin{enumerate}[leftmargin=1.4em, itemsep=1pt, topsep=2pt, label={[\arabic*]}]
+    \item Mnih, V., et al., ``Human-level control through deep reinforcement learning,'' Nature, 2015. Source of the DQN algorithm: experience replay, epsilon-greedy exploration, and the target network, all reimplemented here in NumPy.
+    \item Loughran, T. and McDonald, B., ``When Is a Liability Not a Liability? Textual Analysis, Dictionaries, and 10-Ks,'' Journal of Finance, 2011. Establishes that the language of SEC filings carries return-relevant sentiment, motivating our MD\&A features.
+    \item Reimers, N. and Gurevych, I., ``Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks,'' EMNLP, 2019. The embedding model family behind our anchor-based sentiment scoring.
+  \end{enumerate}
+\end{tcolorbox}
+
+\end{document}
