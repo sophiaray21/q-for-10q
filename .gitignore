@@ -6,3 +6,4 @@ dqn_weights.npz
 filings/
 states.csv
 sentiment_cache.csv
+main.pdf
