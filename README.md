@@ -1,6 +1,6 @@
 # q-for-10q
 
-A Deep Q-Network (DQN) trading agent that reads quarterly 10-Q filings and learns to make buy, hold, or sell decisions. The neural network is written from scratch in NumPy: no PyTorch, no TensorFlow.
+A Deep Q-Network (DQN) trading agent that reads quarterly 10-Q filings and learns to make buy, hold, or sell decisions. The neural network is written from scratch in NumPy: no prepackaged models implemented.
 
 ## 1. Overview of the problem
 
@@ -12,7 +12,7 @@ We frame this as a Markov decision process:
 - **Actions**: sell, hold, or buy. An action sets the target position (-1 short, 0 flat, +1 long) held until the next filing.
 - **Reward**: the position times the log return of the stock from this filing to the next, minus transaction costs on position changes. Log returns add across quarters, so maximizing total reward is the same as maximizing compounded portfolio growth.
 
-The agent is a standard DQN (Mnih et al. 2015): a small feedforward Q-network with experience replay, epsilon-greedy exploration, and a periodically synced target network. Every piece of the network, including backpropagation, is implemented directly in NumPy.
+The agent is a standard DQN (Mnih et al. 2015, https://web.stanford.edu/class/psych209/Readings/MnihEtAlHassibis15NatureControlDeepRL.pdf): a small feedforward Q-network with experience replay, epsilon-greedy exploration, and a periodically synced target network. Every piece of the network, including backpropagation, is implemented directly in NumPy.
 
 A key design decision throughout: everything is aligned to the **filing date**, not the quarter end. A 10-Q becomes public roughly five weeks after the quarter closes, so pairing its contents with quarter-end prices would give the agent information the market did not have yet. Market features only use data up to the filing date, and trades execute at the first close on or after it. The backtest is similarly walk-forward: the agent trains only on the earlier part of history and is evaluated greedily on a held-out later period it has never seen.
 
