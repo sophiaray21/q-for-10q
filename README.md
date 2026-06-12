@@ -144,3 +144,12 @@ flowchart LR
 ### Generated artifacts (gitignored)
 
 `states.csv` (the dataset), `sentiment_cache.csv` (sentiment scores keyed by filing accession number), `filings/` (downloaded 10-Q documents), `dqn_weights.npz` (trained network weights).
+
+## 5. AI disclosure
+
+This project was written by Sophia Ray, Aum Moorjani, and Lawrence Xie. We also used AI coding assistants (including Cursor) in two ways:
+
+- **Pair programming and validation.** We implemented features ourselves first, then used AI to explore alternatives, sanity-check designs, and validate approaches after we had already attempted a solution. Examples include checking the DQN gradient against a numerical estimate, reasoning through filing-date alignment to avoid look-ahead bias, and debugging XBRL edge cases when building the state vector. AI suggestions were reviewed, edited, and tested before anything landed in the repo.
+- **Documentation.** AI helped draft and refine README sections, module docstrings, and the executive summary write-up (`main.tex`). We verified that descriptions matched the actual code and results before committing them.
+
+The reinforcement learning core, data pipeline, and evaluation logic reflect our design choices and manual testing. AI did not replace that work; it accelerated iteration and documentation once we knew what we were trying to build.
